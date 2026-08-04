@@ -7,5 +7,5 @@ export async function handlerReadiness(req: Request, res: Response): Promise<voi
 }
 
 export async function handlerFileserverHits(req: Request, res: Response): Promise<void> {
-    res.send(`<html><body><h1>Hits: ${config.fileserverHits}</h1></body></html>`);
+    res.send(`<html><body><h1>Hits: ${config.api.fileserverHits}</h1></body></html>`);
 }
