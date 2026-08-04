@@ -1,5 +1,7 @@
 dist/
 server.log
+migrations/
+.env
 
 # Logs
 logs

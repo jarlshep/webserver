@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import { respondWithJSON, respondWithError } from "./json.js";
+import { respondWithError, respondWithJSON } from "./json.js";
+import { BadRequestError } from "./errors.js";
 
 export async function handlerChirpsValidate(req: Request, res: Response): Promise<void> {
     type parameters = {
@@ -10,11 +11,34 @@ export async function handlerChirpsValidate(req: Request, res: Response): Promis
 
     const maxChirpLength = 140;
     if (params.body.length > maxChirpLength) {
-        respondWithError(res, 400, "Chirp is too long");
-        return;
+        throw new BadRequestError("Chirp is too long. Max length is 140");
     }
 
+    const clean: string = censorShip(params.body);
+
     respondWithJSON(res, 200, {
-        valid: true,
+        cleanedBody: clean,
     });
 }
+
+function censorShip(body: string): string {
+    let cleanArr: string[] = [];
+    const censorList = ["kerfuffle", "sharbert", "fornax"];
+
+    const splitBody = body.split(" ");
+    
+    for (let i = 0; i < splitBody.length; i++) {
+        if (censorList.includes(splitBody[i].toLowerCase())) {
+            cleanArr.push("****");
+        } else {
+            cleanArr.push(splitBody[i]);
+        }
+    }
+
+    const cleanStr: string = cleanArr.join(" ");
+    return cleanStr;
+}
+function next(): import("express").NextFunction {
+    throw new Error("Function not implemented.");
+}
+
