@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { respondWithError, respondWithJSON } from "./json.js";
+import { respondWithJSON } from "./json.js";
 import { BadRequestError } from "./errors.js";
 
 export async function handlerChirpsValidate(req: Request, res: Response): Promise<void> {
@@ -38,6 +38,7 @@ function censorShip(body: string): string {
     const cleanStr: string = cleanArr.join(" ");
     return cleanStr;
 }
+
 function next(): import("express").NextFunction {
     throw new Error("Function not implemented.");
 }
