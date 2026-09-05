@@ -1,7 +1,8 @@
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import type { JwtPayload } from "jsonwebtoken";
-import { UserNotAuthenticatedError } from "./errors.js";
+import { NotFoundError, UserNotAuthenticatedError } from "./errors.js";
+import { Request, Response } from "express";
 
 type payload = Pick<JwtPayload, "iss" | "sub" | "iat" | "exp">;
 
@@ -56,3 +57,23 @@ export function validateJWT(tokenString: string, secret: string) {
   return decoded.sub;
 }
 
+export async function getBearerToken(req: Request): Promise<string> {
+    let tokenFull: string | undefined;
+    let tokenSplit: string[] = [];
+
+    try {
+        tokenFull = req.get("Authorization");
+    } catch (err) {
+        throw new NotFoundError("No auth token sent");
+    }
+
+    if (typeof tokenFull === "string" && tokenFull !== "") {
+        tokenSplit = tokenFull.split(" ");
+    }
+
+    if (tokenSplit[1] !== "") {
+        return tokenSplit[1];
+    } else {
+        throw new NotFoundError("Auth token empty");
+    }
+}

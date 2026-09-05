@@ -4,7 +4,7 @@ import { chirps } from "../schema.js";
 import { asc, eq } from "drizzle-orm";
 
 export async function createChirp(chirpBody: string, id: UUID) {
-  const [rows] = await db.insert(chirps).values({ body: chirpBody, userID: id }).returning();
+  const [rows] = await db.insert(chirps).values({ body: chirpBody, userId: id }).returning();
   return rows;
 }
 

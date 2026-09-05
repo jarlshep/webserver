@@ -31,9 +31,9 @@ export async function handlerUsersCreate(req: Request, res: Response): Promise<v
 
     const userReturn: UserSafe = {
         "id": userUnsafe.id,
-        "email": userUnsafe.email,
         "createdAt": userUnsafe.createdAt,
         "updatedAt": userUnsafe.updatedAt,
+        "email": userUnsafe.email,
     }
 
     respondWithJSON(res, 201, userReturn);

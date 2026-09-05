@@ -3,9 +3,10 @@ import {
     hashPassword, 
     checkPasswordHash,
     makeJWT,
-    validateJWT
+    validateJWT,
+    getBearerToken
 } from "./auth.js";
-import { UserNotAuthenticatedError } from "./errors.js";
+import { BadRequestError, UserNotAuthenticatedError } from "./errors.js";
 
 describe("Password Hashing", () => {
   const password1 = "correctPassword123!";
@@ -72,54 +73,31 @@ describe("JWT Functions", () => {
   });
 });
 
-/* describe("JSON Web Token create, validate", () => {
-
-  const userID: string = "123456";
-  const expiresIn: number = 10000000;
-  const secret: string = "xyz";
-  let token1: string;
-
-  beforeAll(async () => {
-    token1 = await makeJWT(userID, expiresIn, secret);
+/* describe("getBearerToken", () => {
+  it("should extract the token from a valid header", () => {
+    const token = "mySecretToken";
+    const header = `Bearer ${token}`;
+    expect(getBearerToken(header)).toBe(token);
   });
 
-  it("should return the correct userID", async () => {
-    const result = await validateJWT(token1, secret);
-    expect(result).toBe("123456");
-  });
-}); */
-
-/* describe("JSON Web Token invalid", () => {
-
-  const userID: string = "123456";
-  const expiresIn: number = 10000000;
-  const secretCorrect: string = "xyz";
-  const secretIncorrect: string = "zyx";
-  let token1: string;
-
-  beforeAll(async () => {
-    token1 = await makeJWT(userID, expiresIn, secretCorrect);
+  it("should extract the token even if there are extra parts", () => {
+    const token = "mySecretToken";
+    const header = `Bearer ${token} extra-data`;
+    expect(getBearerToken(header)).toBe(token);
   });
 
-  it("should return an error for invalid token", async () => {
-    const result = await validateJWT(token1, secretIncorrect);
-    expect(result).include("invalid token");
-  });
-}); */
-
-/* describe("JSON Web Token expired", () => {
-
-  const userID: string = "123456";
-  const expiresIn: number = 100;
-  const secret: string = "xyz";
-  let token1: string;
-
-  beforeAll(async () => {
-    token1 = await makeJWT(userID, expiresIn, secret);
+  it("should throw a BadRequestError if the header does not contain at least two parts", () => {
+    const header = "Bearer";
+    expect(() => getBearerToken(header)).toThrow(BadRequestError);
   });
 
-  it("should return an error for expired token", async () => {
-    const result = await validateJWT(token1, secret);
-    expect(result).include("expired token");
+  it('should throw a BadRequestError if the header does not start with "Bearer"', () => {
+    const header = "Basic mySecretToken";
+    expect(() => getBearerToken(header)).toThrow(BadRequestError);
+  });
+
+  it("should throw a BadRequestError if the header is an empty string", () => {
+    const header = "";
+    expect(() => getBearerToken(header)).toThrow(BadRequestError);
   });
 }); */

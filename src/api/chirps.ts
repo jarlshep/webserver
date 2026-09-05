@@ -1,37 +1,40 @@
 import { Request, Response } from "express";
 import { respondWithError, respondWithJSON } from "./json.js";
-import { BadRequestError } from "./errors.js";
+import { BadRequestError, UserNotAuthenticatedError } from "./errors.js";
 import { UUID } from "node:crypto";
 import { createChirp, getAllChirps, getOneChirp } from "../db/queries/chirps.js";
 import { checkUserId } from "../db/queries/users.js";
+import { getBearerToken, validateJWT } from "./auth.js";
+import { config } from "../config.js";
+import { NewUser } from "../db/schema.js";
 
 export async function handlerChirpsCreate(req: Request, res: Response): Promise<void> {
     type parameters = {
         body: string;
-        userId: UUID; // the variable name has to match the incoming JSON, which is not how I use it elsewhere and in my schema. Just needs to match in this function, and it will be irrelevant elsewhere.
+        // userId: UUID;
     };
+
+    type UserSafe = Omit<NewUser, "hashedPassword">;
 
     const params: parameters = req.body;
 
-    // validity logic
-    /* const maxChirpLength = 140;
-    if (params.body.length > maxChirpLength) {
-        throw new BadRequestError("Chirp is too long. Max length is 140");
-    } */
+    const bearerToken = await getBearerToken(req);
+
+    const id = validateJWT(bearerToken, config.api.secret);
+    if (!id || typeof id !== "string") {
+        throw new UserNotAuthenticatedError("User token not valid");
+    }
+
+    const idUUID = id as UUID; // cast id as UUID to make sure query works, since schema declares users.id as a UUID
+
+    const userInfo: UserSafe = await checkUserId(idUUID);
+    if (!userInfo) {
+        throw new UserNotAuthenticatedError("User token not valid_2");
+    }
+
     const cleanBody: string = censorShip(params.body);
-    /* if (await checkUserId(params.userID)) {
-        throw new BadRequestError("invalid userID");
-    } */
-    // end validity logic
 
-    /* const chirp = await createChirp(cleanBody, params.userId);
-
-    respondWithJSON(res, 201, {
-        body: cleanBody,
-        userId: chirpResp.userID
-    }); */
-
-    const chirp = await createChirp(cleanBody, params.userId);
+    const chirp = await createChirp(cleanBody, idUUID);
     respondWithJSON(res, 201, chirp);
 }
 
