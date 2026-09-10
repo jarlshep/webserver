@@ -2,7 +2,8 @@ import argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import type { JwtPayload } from "jsonwebtoken";
 import { NotFoundError, UserNotAuthenticatedError } from "./errors.js";
-import { Request, Response } from "express";
+import { Request } from "express";
+import crypto from "node:crypto";
 
 type payload = Pick<JwtPayload, "iss" | "sub" | "iat" | "exp">;
 
@@ -22,58 +23,62 @@ export async function checkPasswordHash(hash: string, password: string): Promise
 } 
 
 export function makeJWT(userID: string, expiresIn: number, secret: string) {
-  const issuedAt = Math.floor(Date.now() / 1000);
-  const expiresAt = issuedAt + expiresIn;
-  const token = jwt.sign(
-    {
-      iss: TOKEN_ISSUER,
-      sub: userID,
-      iat: issuedAt,
-      exp: expiresAt,
-    } satisfies payload,
-    secret,
-    { algorithm: "HS256" },
-  );
-
-  return token;
+    const issuedAt = Math.floor(Date.now() / 1000);
+    const expiresAt = issuedAt + expiresIn;
+    const token = jwt.sign(
+        {
+            iss: TOKEN_ISSUER,
+            sub: userID,
+            iat: issuedAt,
+            exp: expiresAt,
+        } satisfies payload,
+        secret,
+        { algorithm: "HS256" },
+    );
+    return token;
 }
 
 export function validateJWT(tokenString: string, secret: string) {
-  let decoded: payload;
-  try {
-    decoded = jwt.verify(tokenString, secret) as JwtPayload;
-  } catch (e) {
-    throw new UserNotAuthenticatedError("Invalid token");
-  }
+	let decoded: payload;
+	try {
+		decoded = jwt.verify(tokenString, secret) as JwtPayload;
+	} catch (e) {
+		throw new UserNotAuthenticatedError("Invalid token");
+	}
 
-  if (decoded.iss !== TOKEN_ISSUER) {
-    throw new UserNotAuthenticatedError("Invalid issuer");
-  }
+	if (decoded.iss !== TOKEN_ISSUER) {
+		throw new UserNotAuthenticatedError("Invalid issuer");
+	}
 
-  if (!decoded.sub) {
-    throw new UserNotAuthenticatedError("No user ID in token");
-  }
+	if (!decoded.sub) {
+		throw new UserNotAuthenticatedError("No user ID in token");
+	}
 
-  return decoded.sub;
+	return decoded.sub;
 }
 
 export async function getBearerToken(req: Request): Promise<string> {
-    let tokenFull: string | undefined;
-    let tokenSplit: string[] = [];
+	let tokenFull: string | undefined;
+	let tokenSplit: string[] = [];
 
-    try {
-        tokenFull = req.get("Authorization");
-    } catch (err) {
-        throw new NotFoundError("No auth token sent");
-    }
+	try {
+		tokenFull = req.get("Authorization");
+	} catch (err) {
+		throw new NotFoundError("No auth token sent");
+	}
 
-    if (typeof tokenFull === "string" && tokenFull !== "") {
-        tokenSplit = tokenFull.split(" ");
-    }
+	if (typeof tokenFull === "string" && tokenFull !== "") {
+		tokenSplit = tokenFull.split(" ");
+	}
 
-    if (tokenSplit[1] !== "") {
-        return tokenSplit[1];
-    } else {
-        throw new NotFoundError("Auth token empty");
-    }
+	if (tokenSplit[1] !== "") {
+		return tokenSplit[1];
+	} else {
+		throw new NotFoundError("Auth token empty");
+	}
+}
+
+export function makeRefreshToken(): string {
+	const randoData = crypto.randomBytes(32);
+	return randoData.toString("hex");
 }
