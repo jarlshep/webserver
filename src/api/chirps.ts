@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { respondWithError, respondWithJSON } from "./json.js";
 import { BadRequestError, UserNotAuthenticatedError } from "./errors.js";
 import { UUID } from "node:crypto";
-import { createChirp, getAllChirps, getOneChirp } from "../db/queries/chirps.js";
+import { createChirp, deleteOneChirp, getAllChirps, getOneChirp } from "../db/queries/chirps.js";
 import { checkUserId } from "../db/queries/users.js";
 import { getBearerToken, validateJWT } from "./auth.js";
 import { config } from "../config.js";
@@ -81,6 +81,58 @@ export async function handlerGetOneChirp(req: Request, res: Response): Promise<v
     } else {
         respondWithError(res, 404, `No chirp with id ${id}`);
     }
+}
+
+export async function handlerDeleteChirp(req: Request, res: Response): Promise<void> {
+    
+    const bearerToken = await getBearerToken(req);
+
+    if (bearerToken === "0") {
+        respondWithError(res, 401, "Malformed auth token");
+        return;
+    }
+
+    const id = validateJWT(bearerToken, config.api.secret);
+    if (!id || typeof id !== "string") {
+        throw new UserNotAuthenticatedError("User token not valid");
+    }
+
+    const idUUID = id as UUID;
+
+    type UserSafe = Omit<NewUser, "hashedPassword">;
+
+    const userInfo: UserSafe = await checkUserId(idUUID);
+    if (!userInfo) {
+        throw new UserNotAuthenticatedError("User token not valid_2");
+    }
+    
+    if (typeof req.params.chirpId !== "string") {
+        throw new BadRequestError("Invalid chirpID, deletion not possible");
+    }
+
+    const chirpId: string = req.params.chirpId;
+
+    // -------- check user id of chirp to confirm authorization
+
+    const chirpToDelete = await getOneChirp(chirpId);
+
+    if (chirpToDelete?.userId !== userInfo.id) {
+        respondWithError(res, 403, `User not authorized to delete chirp`);
+        return;
+    }
+
+    const deletedChirp = await deleteOneChirp(chirpId);
+
+    if (deletedChirp) {
+        const ret = {};
+		respondWithJSON(res, 204, ret);
+    } else {
+        respondWithError(res, 404, `No chirp with id ${chirpId} found for deletion`);
+    }
+
+
+
+
 } 
 
 function next(): import("express").NextFunction {

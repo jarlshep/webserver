@@ -64,7 +64,6 @@ export async function getBearerToken(req: Request): Promise<string> {
 
 	headerFull = req.get("Authorization");
 	if (!headerFull) {
-		// throw new BadRequestError("Malformed authorization token");
 		return "0";
 	}
 
@@ -76,13 +75,10 @@ export async function getBearerToken(req: Request): Promise<string> {
 	if (headerSplit[0] !== "Bearer" || tokenSplit.length !== 3) {
 		return "0";
 	} else {
-		// throw new NotFoundError("Auth token empty");
 		return headerSplit[1];
 	}
 }
 
 export function makeRefreshToken(): string {
-	/* const randoData = crypto.randomBytes(32);
-	return randoData.toString("hex"); */
 	return crypto.randomBytes(32).toString("hex");
 }

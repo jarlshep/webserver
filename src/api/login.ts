@@ -35,7 +35,7 @@ export async function handlerUserLogin(req: Request, res: Response): Promise<voi
     const token = makeJWT(userUnsafe.id, expiry, config.api.secret);
     
     const refreshToken = makeRefreshToken();
-    // const refreshRowInfo = insertRowRefreshToken(userUnsafe.id, refreshToken);
+    
     insertRowRefreshToken(userUnsafe.id, refreshToken);
 
     if (isPwCorrect) {
