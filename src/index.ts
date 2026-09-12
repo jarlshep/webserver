@@ -8,7 +8,7 @@ import postgres from "postgres";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { config } from "./config.js";
-import { handlerUsersCreate } from "./api/users.js";
+import { handlerUpdatePassword, handlerUsersCreate } from "./api/users.js";
 import { handlerUserLogin } from "./api/login.js";
 import { handlerRefresh, handlerRevoke } from "./api/refresh_revoke.js";
 
@@ -51,6 +51,9 @@ app.post("/api/refresh", (req, res, next) => {
 });
 app.post("/api/revoke", (req, res, next) => {
     Promise.resolve(handlerRevoke(req, res)).catch(next);
+});
+app.put("/api/users", (req, res, next) => {
+    Promise.resolve(handlerUpdatePassword(req, res)).catch(next);
 });
 
 app.use(errorMiddleware);

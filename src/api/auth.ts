@@ -1,9 +1,10 @@
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import type { JwtPayload } from "jsonwebtoken";
-import { NotFoundError, UserNotAuthenticatedError } from "./errors.js";
+import { BadRequestError, NotFoundError, UserNotAuthenticatedError } from "./errors.js";
 import { Request } from "express";
 import crypto from "node:crypto";
+import { respondWithError } from "./json.js";
 
 type payload = Pick<JwtPayload, "iss" | "sub" | "iat" | "exp">;
 
@@ -58,27 +59,30 @@ export function validateJWT(tokenString: string, secret: string) {
 }
 
 export async function getBearerToken(req: Request): Promise<string> {
-	let tokenFull: string | undefined;
-	let tokenSplit: string[] = [];
+	let headerFull: string | undefined;
+	let headerSplit: string[] = [];
 
-	try {
-		tokenFull = req.get("Authorization");
-	} catch (err) {
-		throw new NotFoundError("No auth token sent");
+	headerFull = req.get("Authorization");
+	if (!headerFull) {
+		// throw new BadRequestError("Malformed authorization token");
+		return "0";
 	}
 
-	if (typeof tokenFull === "string" && tokenFull !== "") {
-		tokenSplit = tokenFull.split(" ");
+	if (typeof headerFull === "string" && headerFull !== "") {
+		headerSplit = headerFull.split(" ");
 	}
 
-	if (tokenSplit[1] !== "") {
-		return tokenSplit[1];
+	const tokenSplit = headerSplit[1].split(".");
+	if (headerSplit[0] !== "Bearer" || tokenSplit.length !== 3) {
+		return "0";
 	} else {
-		throw new NotFoundError("Auth token empty");
+		// throw new NotFoundError("Auth token empty");
+		return headerSplit[1];
 	}
 }
 
 export function makeRefreshToken(): string {
-	const randoData = crypto.randomBytes(32);
-	return randoData.toString("hex");
+	/* const randoData = crypto.randomBytes(32);
+	return randoData.toString("hex"); */
+	return crypto.randomBytes(32).toString("hex");
 }
