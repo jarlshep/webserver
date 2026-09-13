@@ -112,8 +112,6 @@ export async function handlerDeleteChirp(req: Request, res: Response): Promise<v
 
     const chirpId: string = req.params.chirpId;
 
-    // -------- check user id of chirp to confirm authorization
-
     const chirpToDelete = await getOneChirp(chirpId);
 
     if (chirpToDelete?.userId !== userInfo.id) {
@@ -129,10 +127,6 @@ export async function handlerDeleteChirp(req: Request, res: Response): Promise<v
     } else {
         respondWithError(res, 404, `No chirp with id ${chirpId} found for deletion`);
     }
-
-
-
-
 } 
 
 function next(): import("express").NextFunction {

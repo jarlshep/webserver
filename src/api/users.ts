@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { BadRequestError, UserNotAuthenticatedError } from "./errors.js";
 import { respondWithError, respondWithJSON } from "./json.js";
-import { checkUserId, createUser, updateUserEmailAndPW } from "../db/queries/users.js";
+import { checkUserId, createUser, updateChirpyRed, updateUserEmailAndPW } from "../db/queries/users.js";
 import { getBearerToken, hashPassword, validateJWT } from "./auth.js";
 import { NewUser } from "../db/schema.js";
 import { config } from "../config.js";
@@ -36,6 +36,7 @@ export async function handlerUsersCreate(req: Request, res: Response): Promise<v
         "createdAt": userUnsafe.createdAt,
         "updatedAt": userUnsafe.updatedAt,
         "email": userUnsafe.email,
+        "isChirpyRed": userUnsafe.isChirpyRed,
     }
 
     respondWithJSON(res, 201, userReturn);
@@ -88,6 +89,7 @@ export async function handlerUpdatePassword(req: Request, res: Response): Promis
         "createdAt": userUnsafe.createdAt,
         "updatedAt": userUnsafe.updatedAt,
         "email": userUnsafe.email,
+        "isChirpyRed": userUnsafe.isChirpyRed,
     }
 
     if (!userReturn) {
@@ -95,6 +97,34 @@ export async function handlerUpdatePassword(req: Request, res: Response): Promis
         return;
     } else {
         respondWithJSON(res, 200, userReturn);
+        return;
+    }
+}
+
+export async function handlerUpdateUserChirpyRed(req: Request, res: Response): Promise<void> {
+
+    type parameters = {
+        event: string;
+        data: { 
+            userId: UUID; 
+        };
+    };
+
+    type UserSafe = Omit<NewUser, "hashedPassword">;
+
+    const params: parameters = req.body;
+
+    if (params.event !== "user.upgraded") {
+        respondWithError(res, 204, "Request not for user.upgraded");
+        return;
+    }
+
+    const userInfo: UserSafe = await updateChirpyRed(params.data.userId);
+    if (!userInfo) {
+        respondWithError(res, 404, "User not found for user.upgraded");
+        return;
+    } else {
+        respondWithJSON(res, 204, "");
         return;
     }
 }

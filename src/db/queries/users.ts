@@ -21,4 +21,9 @@ export async function checkUserByEmail(email: string | SQLWrapper) {
 export async function updateUserEmailAndPW(newEmail: string, hashedPW: string, id: UUID) {
 	const row = await db.update(users).set({ email: newEmail, hashedPassword: hashedPW }).where(eq(users.id, id)).returning();
 	return row[0];
-} 
+}
+
+export async function updateChirpyRed(id: UUID) {
+	const row = await db.update(users).set({ isChirpyRed: true }).where(eq(users.id, id)).returning();
+	return row[0];
+}

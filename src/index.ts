@@ -8,7 +8,7 @@ import postgres from "postgres";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { config } from "./config.js";
-import { handlerUpdatePassword, handlerUsersCreate } from "./api/users.js";
+import { handlerUpdatePassword, handlerUpdateUserChirpyRed, handlerUsersCreate } from "./api/users.js";
 import { handlerUserLogin } from "./api/login.js";
 import { handlerRefresh, handlerRevoke } from "./api/refresh_revoke.js";
 
@@ -57,6 +57,9 @@ app.put("/api/users", (req, res, next) => {
 });
 app.delete("/api/chirps/:chirpId", (req, res, next) => {
     Promise.resolve(handlerDeleteChirp(req, res)).catch(next);
+});
+app.post("/api/polka/webhooks", (req, res, next) => {
+    Promise.resolve(handlerUpdateUserChirpyRed(req, res)).catch(next);
 });
 
 app.use(errorMiddleware);

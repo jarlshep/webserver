@@ -44,6 +44,7 @@ export async function handlerUserLogin(req: Request, res: Response): Promise<voi
             "email": userUnsafe.email,
             "createdAt": userUnsafe.createdAt,
             "updatedAt": userUnsafe.updatedAt,
+            "isChirpyRed": userUnsafe.isChirpyRed,
             "token": token,
             "refreshToken": refreshToken,
         }

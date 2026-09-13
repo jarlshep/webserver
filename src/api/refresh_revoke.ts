@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { NotFoundError } from "./errors.js";
-import { getRefreshTokenInfo, insertRowRefreshToken, revokeToken } from "../db/queries/refresh_revoke.js";
-import { getBearerToken, makeJWT, validateJWT } from "./auth.js";
+import { getRefreshTokenInfo, revokeToken } from "../db/queries/refresh_revoke.js";
+import { makeJWT } from "./auth.js";
 import { respondWithError, respondWithJSON } from "./json.js";
 import { config } from "../config.js";
 
