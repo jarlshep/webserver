@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { BadRequestError, UserNotAuthenticatedError } from "./errors.js";
 import { respondWithError, respondWithJSON } from "./json.js";
 import { checkUserId, createUser, updateChirpyRed, updateUserEmailAndPW } from "../db/queries/users.js";
-import { getBearerToken, hashPassword, validateJWT } from "./auth.js";
+import { getApiKey, getBearerToken, hashPassword, validateJWT } from "./auth.js";
 import { NewUser } from "../db/schema.js";
 import { config } from "../config.js";
 import { UUID } from "node:crypto";
@@ -109,6 +109,13 @@ export async function handlerUpdateUserChirpyRed(req: Request, res: Response): P
             userId: UUID; 
         };
     };
+
+    const polkaApiKey = await getApiKey(req);
+    console.log(`polkaApiKey: ${polkaApiKey}`);
+    console.log(`config.api.polkaKey: ${config.api.polkaKey}`);   
+    if (polkaApiKey !== config.api.polkaKey) {
+        throw new UserNotAuthenticatedError("API key not valid");
+    }
 
     type UserSafe = Omit<NewUser, "hashedPassword">;
 

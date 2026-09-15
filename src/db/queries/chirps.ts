@@ -27,3 +27,11 @@ export async function deleteOneChirp(chirpID: string) {
 	}
 	return rows[0];
 }
+
+export async function getAuthorsChirps(authorId: string) {
+	const rows = await db.select().from(chirps).where(eq(chirps.userId, authorId));
+	if (rows.length === 0) {
+		return;
+	}
+	return rows;
+}

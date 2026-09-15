@@ -1,10 +1,9 @@
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import type { JwtPayload } from "jsonwebtoken";
-import { BadRequestError, NotFoundError, UserNotAuthenticatedError } from "./errors.js";
+import { UserNotAuthenticatedError } from "./errors.js";
 import { Request } from "express";
 import crypto from "node:crypto";
-import { respondWithError } from "./json.js";
 
 type payload = Pick<JwtPayload, "iss" | "sub" | "iat" | "exp">;
 
@@ -81,4 +80,25 @@ export async function getBearerToken(req: Request): Promise<string> {
 
 export function makeRefreshToken(): string {
 	return crypto.randomBytes(32).toString("hex");
+}
+
+export async function getApiKey(req: Request): Promise<string> {
+	let headerFull: string | undefined;
+	let headerSplit: string[] = [];
+
+	headerFull = req.get("Authorization");
+	if (!headerFull) {
+		return "0";
+	}
+
+	if (typeof headerFull === "string" && headerFull !== "") {
+		headerSplit = headerFull.split(" ");
+	}
+
+	const tokenSplit = headerSplit[1].split(".");
+	if (headerSplit[0] !== "ApiKey") {
+		return "0";
+	} else {
+		return headerSplit[1];
+	}
 }

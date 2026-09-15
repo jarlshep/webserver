@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { respondWithError, respondWithJSON } from "./json.js";
 import { BadRequestError, UserNotAuthenticatedError } from "./errors.js";
 import { UUID } from "node:crypto";
-import { createChirp, deleteOneChirp, getAllChirps, getOneChirp } from "../db/queries/chirps.js";
+import { createChirp, deleteOneChirp, getAllChirps, getAuthorsChirps, getOneChirp } from "../db/queries/chirps.js";
 import { checkUserId } from "../db/queries/users.js";
 import { getBearerToken, validateJWT } from "./auth.js";
 import { config } from "../config.js";
@@ -61,11 +61,11 @@ function censorShip(body: string): string {
     return cleanStr;
 }
 
-export async function handlerGetChirps(req: Request, res: Response): Promise<void> {
+/* export async function handlerGetChirps(req: Request, res: Response): Promise<void> {
     const allChirps = await getAllChirps();
 
     respondWithJSON(res, 200, allChirps);
-} 
+}  */
 
 export async function handlerGetOneChirp(req: Request, res: Response): Promise<void> {
     if (typeof req.params.chirpId !== "string") {
@@ -127,7 +127,28 @@ export async function handlerDeleteChirp(req: Request, res: Response): Promise<v
     } else {
         respondWithError(res, 404, `No chirp with id ${chirpId} found for deletion`);
     }
-} 
+}
+
+export async function handlerAllOrAuthorChirps(req: Request, res: Response): Promise<void> {
+    let authorId = "";
+    let authorIdQuery = req.query.authorId;
+    if (typeof authorIdQuery === "string") {
+        authorId = authorIdQuery;
+    }
+
+    if (!authorId) {
+        const chirps = await getAllChirps();
+        respondWithJSON(res, 200, chirps);
+        return;
+    } else if (typeof authorId === "string") {
+        const chirps = await getAuthorsChirps(authorId);
+        respondWithJSON(res, 200, chirps);
+        return;
+    } else {
+        respondWithError(res, 404, `No author with id ${authorId}`);
+        return;
+    }
+}
 
 function next(): import("express").NextFunction {
     throw new Error("Function not implemented.");
