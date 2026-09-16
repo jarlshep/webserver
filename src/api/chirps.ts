@@ -6,7 +6,7 @@ import { createChirp, deleteOneChirp, getAllChirps, getAuthorsChirps, getOneChir
 import { checkUserId } from "../db/queries/users.js";
 import { getBearerToken, validateJWT } from "./auth.js";
 import { config } from "../config.js";
-import { NewUser } from "../db/schema.js";
+import { NewChirp, NewUser } from "../db/schema.js";
 
 export async function handlerChirpsCreate(req: Request, res: Response): Promise<void> {
     type parameters = {
@@ -129,7 +129,7 @@ export async function handlerDeleteChirp(req: Request, res: Response): Promise<v
     }
 }
 
-export async function handlerAllOrAuthorChirps(req: Request, res: Response): Promise<void> {
+/* export async function handlerAllOrAuthorChirps(req: Request, res: Response): Promise<void> {
     let authorId = "";
     let authorIdQuery = req.query.authorId;
     if (typeof authorIdQuery === "string") {
@@ -148,7 +148,64 @@ export async function handlerAllOrAuthorChirps(req: Request, res: Response): Pro
         respondWithError(res, 404, `No author with id ${authorId}`);
         return;
     }
+} */
+
+export async function handlerAllOrAuthorChirpsSort(req: Request, res: Response): Promise<void> {
+    let authorId = "";
+    let authorIdQuery = req.query.authorId;
+    if (typeof authorIdQuery === "string") {
+        authorId = authorIdQuery;
+    }
+
+    let sortOrder = "";
+    let sortOrderQuery = req.query.sort;
+    if (typeof sortOrderQuery === "string") {
+        sortOrder = sortOrderQuery;
+    }
+    if (typeof sortOrderQuery === "string" && (sortOrderQuery === "asc" || sortOrderQuery === "desc")) {
+        sortOrder = sortOrderQuery;
+    }
+
+    if (!authorId) {
+        const chirps = await getAllChirps();
+        if (sortOrder === "desc") {
+            const chirpsSorted = sortChirpsDesc(chirps);
+            respondWithJSON(res, 200, chirpsSorted);
+            return;
+        }
+        respondWithJSON(res, 200, chirps);
+        return;
+    } else if (typeof authorId === "string") {
+        const chirps = await getAuthorsChirps(authorId);
+        if (chirps && sortOrder === "desc") {
+            const chirpsSorted = sortChirpsDesc(chirps);
+            respondWithJSON(res, 200, chirpsSorted);
+            return;
+        }
+        respondWithJSON(res, 200, chirps);
+        return;
+    } else {
+        respondWithError(res, 404, `No author with id ${authorId}`);
+        return;
+    }
 }
+
+function sortChirpsDesc(chirps: NewChirp[]): NewChirp[] {
+    let newArr: NewChirp[] = [];
+    for (let i = 0; i <= chirps.length - 1; i++) {
+        newArr.unshift(chirps[i]);
+        // console.log(newArr);
+    }
+    return newArr;
+}
+// newArr = newArr.push(chirps[0]);
+/* for (let i = 1; i = chirps.length - 1; i++) {
+        if (chirps[i].createdAt? > chirps[i-1].createdAt?) {
+            newArr = newArr.unshift(chirps[i]);
+        } else {
+            newArr = newArr.push(chirps[i]);
+        }
+    } */
 
 function next(): import("express").NextFunction {
     throw new Error("Function not implemented.");
